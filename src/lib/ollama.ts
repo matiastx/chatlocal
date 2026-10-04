@@ -12,7 +12,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  baseUrl: 'https://ollama.mgtsolutions.uk',
+  baseUrl: 'http://100.75.207.93:11434',
   accessClientId: '',
   accessClientSecret: '',
   model: '',
