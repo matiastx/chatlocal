@@ -25,7 +25,9 @@ const LS_CONVS = 'chatlocal:conversations'
 const loadJSON = <T,>(key: string, fallback: T): T => {
   try {
     const raw = localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T) : fallback
+    // Merge con defaults: settings guardadas de versiones previas pueden
+    // no tener los campos nuevos (o tener algunos removidos).
+    return raw ? { ...fallback, ...(JSON.parse(raw) as Partial<T>) } : fallback
   } catch {
     return fallback
   }
@@ -67,7 +69,7 @@ export default function App() {
     localStorage.setItem(LS_CONVS, JSON.stringify(conversations))
   }, [conversations])
 
-  // Cargar modelos al cambiar servidor/token
+  // Cargar modelos al cambiar servidor/credenciales
   useEffect(() => {
     let cancelled = false
     setModelsError(null)
@@ -89,7 +91,7 @@ export default function App() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.baseUrl, settings.token])
+  }, [settings.baseUrl, settings.accessClientId, settings.accessClientSecret])
 
   // Scroll al fondo con cada chunk
   useEffect(() => {
@@ -411,15 +413,32 @@ export default function App() {
               </div>
               <div>
                 <label className="mb-1 block text-xs text-eva-text-muted">
-                  Token API (opcional — p. ej. Service Token de Cloudflare Access)
+                  Access Client ID (Cloudflare Zero Trust → Service Auth → Service Token)
+                </label>
+                <input
+                  className="w-full rounded-lg border border-eva-border bg-eva-background px-3 py-2 text-sm outline-none focus:border-eva-primary"
+                  value={settings.accessClientId}
+                  onChange={(e) => setSettings((s) => ({ ...s, accessClientId: e.target.value }))}
+                  placeholder="xxxx.access"
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-eva-text-muted">
+                  Access Client Secret
                 </label>
                 <input
                   type="password"
                   className="w-full rounded-lg border border-eva-border bg-eva-background px-3 py-2 text-sm outline-none focus:border-eva-primary"
-                  value={settings.token}
-                  onChange={(e) => setSettings((s) => ({ ...s, token: e.target.value }))}
-                  placeholder="Bearer token"
+                  value={settings.accessClientSecret}
+                  onChange={(e) => setSettings((s) => ({ ...s, accessClientSecret: e.target.value }))}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
                 />
+                <p className="mt-1 text-[11px] text-eva-text-faint">
+                  Solo necesarios porque el dominio está detrás de Cloudflare Access. Se guardan
+                  solo en este navegador (localStorage).
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-eva-text-muted">Modelo</label>

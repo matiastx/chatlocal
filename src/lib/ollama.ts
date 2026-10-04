@@ -1,14 +1,20 @@
 // Cliente Ollama mínimo (sin SDK): /api/tags y /api/chat con streaming NDJSON.
+// Soporta Cloudflare Access: se envían los headers del Service Token
+// (CF-Access-Client-Id / CF-Access-Client-Secret) cuando están configurados.
 
 export interface Settings {
   baseUrl: string
-  token: string
+  /** Cloudflare Access Service Token — Client ID (Zero Trust → Service Auth). */
+  accessClientId: string
+  /** Cloudflare Access Service Token — Client Secret. */
+  accessClientSecret: string
   model: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   baseUrl: 'https://ollama.mgtsolutions.uk',
-  token: '',
+  accessClientId: '',
+  accessClientSecret: '',
   model: '',
 }
 
@@ -21,7 +27,12 @@ export interface ChatMessage {
 
 const headers = (s: Settings): HeadersInit => ({
   'Content-Type': 'application/json',
-  ...(s.token ? { Authorization: `Bearer ${s.token}` } : {}),
+  ...(s.accessClientId && s.accessClientSecret
+    ? {
+        'CF-Access-Client-Id': s.accessClientId,
+        'CF-Access-Client-Secret': s.accessClientSecret,
+      }
+    : {}),
 })
 
 const base = (s: Settings) => s.baseUrl.replace(/\/$/, '')
